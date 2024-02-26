@@ -1,0 +1,30 @@
+# 3ds Max Wavefront OBJ Exporter v0.97b - (c)2007 guruware
+# File Created: 25.07.2020 17:49:45
+
+newmtl windmill_001_base_COL_jpg
+	Ns 1.3008
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.6980 0.6980 0.6980
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka /textures/windmill_001_base_COL.jpg
+	map_Kd /textures/windmill_001_base_COL.jpg
+
+newmtl windmill_001_lopatky_COL_jpg
+	Ns 1.3008
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.6980 0.6980 0.6980
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka /textures/windmill_001_lopatky_COL.jpg
+	map_Kd /textures/windmill_001_lopatky_COL.jpg
