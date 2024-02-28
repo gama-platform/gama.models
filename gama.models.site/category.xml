@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature id="gama.feature.models.generic" version="0.0.0">
+      <category name="gama.models"/>
+   </feature>
+   <feature id="gama.feature.models.thematic" version="0.0.0">
+      <category name="gama.models"/>
+   </feature>
+
+   <category-def name="gama.models" label="GAMA Models"/>
+</site>

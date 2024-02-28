@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="gama.feature.models.thematic"
+      label="Thematic Models"
+      version="1.0.0.qualifier"
+      provider-name="GAMA Trainers"
+      plugin="gama.models.thematic">
+
+   <description url="http://www.gama-platform.org">
+   </description>
+
+   <copyright url="http://www.example.com/copyright">
+      [Enter Copyright Description here.]
+   </copyright>
+
+   <license url="http://www.example.com/license">
+      [Enter License Description here.]
+   </license>
+
+   <plugin
+         id="gama.models.thematic"
+         version="0.0.0"/>
+
+</feature>

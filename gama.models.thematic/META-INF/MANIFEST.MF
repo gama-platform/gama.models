@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Thematic Models Library
+Bundle-SymbolicName: gama.models.thematic
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: GAMA Trainers

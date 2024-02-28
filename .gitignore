@@ -1,3 +1,19 @@
+*.class
+bin/
+*~
+logs.zip
+*.orig
+*.java._trace
+*.smap
 
-Generic/.DS_Store
+**/.DS_Store
 .DS_Store
+
+src-gen/
+xtend-gen/
+
+buildroot
+
+target
+generated
+generated-sources
