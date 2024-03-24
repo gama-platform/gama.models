@@ -13,22 +13,21 @@ model perception1
 global {  
 	
 	init {
-		create a;
+		create a number:10;
+		ask a {iseeyou <- any(a-self);}
 	}
 }
 
 species a {
 	
-	init {
-		location <- world.shape.centroid;
-	}
+	rgb color <- rnd_color(255);
+	
+	a iseeyou;
 	
 	aspect default {
-		point l <- location+{2,0};
-		draw circle(1) color:#black;
-		loop i over:a.attributes {
-			draw i+" = "+(self[i]) at:l color:#black; l <- l + {0,2};
-		}
+		draw circle(1) color:color;
+		draw line(location, iseeyou.location) color:color end_arrow:1;
+		draw "Watch ya "+iseeyou at:line(location, iseeyou.location).location color:color;
 	}
 }
 

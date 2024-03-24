@@ -33,20 +33,34 @@ global {
 		// Each line of the graph is a road
 		create r from:g.edges {
 			num_lanes <- 2;
-			maxspeed <- rnd(speedlimit);
 			// Create the other way round road
 			create r {
 				num_lanes <- 2;
 				shape <- line(reverse(myself.shape.points));
-				maxspeed <- myself.maxspeed;
 				linked_road <- myself;
 				myself.linked_road <- self;
 			}
 		}
 		
+		// Create intersections
 		create i from:g.vertices;
 		
 		g <- as_driving_graph(r,i);
+		
+		// Turn some intersections into trafic lights
+		ask i where (length(each.roads_in) > 2) {
+			orientations <- [{0,-2},{2,0},{0,2},{-2,0}];
+			if flip(0.4) {
+				seq <- 45#s;
+				stop << []; // ???
+				ways <- [[],[]];
+				loop rd over:roads_in {
+					list<point> pts2 <- r(rd).shape.points;
+					float angle_dest <- last(pts2) direction_to rd.location;
+					if angle_dest=90 or angle_dest=270 {ways[0] <+ rd;} else {ways[1] <+ rd;}
+				}
+			}
+		}
 		
 		create a number:10 {location <- any_location_in(any(g.edges)); color <- rnd_color(255);}
 	}
@@ -72,10 +86,29 @@ species r skills:[road_skill] {
 }
 
 species i skills:[intersection_skill] {
-	aspect default { draw circle(2) color:#lightgrey;}
+	
+	list<point> orientations;
+	
+	list<list<r>> ways;
+	
+	float seq <- #infinity;
+	bool green <- true;
+	
+	reflex lights when:every(seq) and not(empty(ways)){
+		green <- green ? false : true;
+		stop[0] <- ways[green?0:1];
+	}
+	
+	aspect default { 
+		loop xy over:orientations {
+			draw rectangle({1+abs(xy.y),1+abs(xy.x)}) at:location+xy 
+				color:empty(ways)?#grey : (abs(xy.x)=(green?0:2)?#red:#green);
+		}
+	}
 }
 
 experiment xp {
+	float minimum_cycle_duration <- 0.02;
 	output {
 		display main type:3d {
 			species i;
