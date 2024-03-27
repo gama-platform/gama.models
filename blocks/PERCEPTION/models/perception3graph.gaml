@@ -15,25 +15,29 @@ global {
 	a caller;
 	int perception <- 2;
 	
-	graph g;
+	graph<a,unknown> g;
 	
 	init {
-//		create a number:100;
-//		caller <- any(a);
 		
-		g <- as_spatial_graph(generate_complete_graph(10,false,a));
+		create a number:20;
+        g <- graph([]);
+        
+        loop agt over: a {
+            add node(agt) to: g;
+        }
+        
+        loop i from: 0 to: length(g.vertices) - 2 {
+        	add edge(g.vertices[i],g.vertices[(i+1) mod length(g.vertices)]) to: g;
+            loop j from: i+1 to: length(g.vertices)-1 {
+                if flip(0.01) {add edge(g.vertices[i],g.vertices[j]) to: g;}
+            }
+        }
 		
 		caller <- any(a);
 		
-		write g successors_of caller;
-		ask g successors_of caller collect a(each) {
-			write sample(self);
-			onsight <- true;
-		}
+		ask g neighbors_of caller {onsight <- true;}
 		
-//		using g {
-//			ask caller neighbors_at perception {onsight <- true;}	
-//		}
+		
 	}
 	
 }
@@ -44,6 +48,7 @@ species a {
 	bool onsight <- false;
 	
 	aspect default {
+		if self=caller {draw square(3) color:color;}
 		draw circle(1) color:blend(color,#transparent,onsight?1:0.1);
 	}
 	
