@@ -15,21 +15,42 @@ global {
 	a caller;
 	int perception <- 2;
 	
-	graph g;
+	graph<a,unknown> g <- graph([]);
 	
 	init {
-//		create a number:100;
-//		caller <- any(a);
+		create a number:10;
+//		g <- generate_complete_graph(false,list(a));
+//		write g;
 		
-		g <- as_spatial_graph(generate_complete_graph(10,false,a));
+		
+//		g <- graph([]);
+		
+		loop agt over: a {
+			add node(agt) to: g;
+		}
+		
+		loop i from: 0 to: length(g.vertices) - 2 {
+			loop j from: i+1 to: length(g.vertices)-1 {
+				write sample(i,j);
+				add edge(g.vertices[i],g.vertices[j]) to: g;
+			}
+		} 
+		
+		write g;
 		
 		caller <- any(a);
 		
-		write g successors_of caller;
-		ask g successors_of caller collect a(each) {
+		write sample(g successors_of caller);
+//		ask g successors_of caller collect a(each) {
+		ask g successors_of caller {
 			write sample(self);
 			onsight <- true;
 		}
+		
+		using g {
+			write caller neighbors_at 1;
+		}
+		
 		
 //		using g {
 //			ask caller neighbors_at perception {onsight <- true;}	
@@ -38,7 +59,7 @@ global {
 	
 }
 
-species a {
+species a parent: graph_node {
 	
 	rgb color <- rnd_color(255);
 	bool onsight <- false;
