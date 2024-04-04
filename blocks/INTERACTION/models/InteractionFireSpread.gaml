@@ -14,18 +14,20 @@ global {
 	
 	init {
 		
-		ask ((length(plot) * 0.7) among plot) { state <- "forest"; color <- #green; }
+		ask ((length(plot) * 1) among plot) { state <- "forest"; color <- #green; }
 		ask any(plot where (each.state = "forest")) { state <- "fire"; color <- #firebrick;}
 	}
 	
 }
 
-grid plot width:100 height:100 /*schedules:plot where (each.state="fire") neighbors:8*/ {
+species a {}
+
+grid plot width:100 height:100 schedules:shuffle(plot) neighbors:8 {
 	
 	rgb color <- #white;
 	string state <- "clear";
 	
-	reflex spread {
+	reflex spread when:(state="fire") {
 		ask neighbors where (each.state="forest") {state <- myself.state; color <- myself.color;}
 	}
 	

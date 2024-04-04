@@ -32,7 +32,12 @@ species a skills:[moving] {
 		do goto target:destination(state);
 	}
 	
+	
+	point myfriendlocation;
 	point destination(string s) {
+		
+		ask friend { myself.myfriendlocation <- self.location; }
+		
 		if s="coward" {
 			return friend.location - enemy.location + friend.location; 
 		} else {

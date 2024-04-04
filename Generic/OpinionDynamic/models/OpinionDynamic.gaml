@@ -14,12 +14,13 @@ global {
 	
 	int n <- 100;
 	
-	float mu <- 1.0 min:0.1 max:1.0 parameter:true category:"relative agreement";
-	float rau <- 0.4 min:0.01 max:0.99 parameter:true category:"relative agreement";
+	float mu <- 1.0 min:0.1 max:1.0;
+	float rau <- 0.4 min:0.01 max:2.0;
+	float extremismu <- 0.5 min:0.0 max:1.0;
 	
 	float bce <- 0.15 min:0.01 max:0.99 parameter:true category:"bounded confidence";
 	
-	string modeltype <- "relative agreement" among:["relative agreement","bounded confidence"] parameter:true;
+	string modeltype <- "relative agreement" among:["relative agreement","bounded confidence"];
 	species<individual> x;
 	
 	init {
@@ -43,7 +44,10 @@ species individual virtual:true {
 species ra_individual parent:individual {
 	
 	// Homogeneous confidence
-	init { c <- {-rau,rau}; }
+	init {
+		float muxtrm <- rau * (1-extremismu) + rau * (1-o^6) * (extremismu);  
+		c <- {-muxtrm,muxtrm};
+	}
 	
 	reflex meet {
 		ra_individual i <- any(ra_individual-self);
@@ -74,11 +78,23 @@ species bc_individual parent:individual {
 }
 
 experiment od {
+	
+	parameter "the model:" var:modeltype;
+	
+	parameter "mu" var:mu category:"relative agreement";
+	parameter "u" var:rau category:"relative agreement";
+	parameter "extremism: " var:extremismu category:"relative agreement";
+	
 	output {
 		display main type:2d {
-			chart "opinions" type:series series_label_position:none {
+			chart "opinions" type:series series_label_position:none position:{0,0} size:{1,0.5} {
 				loop i over:x {
 					data sample(i) value:i.o;
+				}
+			}
+			chart "confidence" type:series series_label_position:none position:{0,0.5} size:{1,0.5} {
+				loop i over:x {
+					data sample(i) value:i.o color:blend(#red,#grey,i.c.y/rau);
 				}
 			}
 		}

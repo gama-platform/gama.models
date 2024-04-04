@@ -15,29 +15,46 @@ global {
 	a caller;
 	int perception <- 2;
 	
-	graph<a,unknown> g;
+	graph<a,unknown> g <- graph([]);
 	
 	init {
+		create a number:10;
+//		g <- generate_complete_graph(false,list(a));
+//		write g;
 		
-		create a number:20;
-        g <- graph([]);
-        
-        loop agt over: a {
-            add node(agt) to: g;
-        }
-        
-        loop i from: 0 to: length(g.vertices) - 2 {
-        	add edge(g.vertices[i],g.vertices[(i+1) mod length(g.vertices)]) to: g;
-            loop j from: i+1 to: length(g.vertices)-1 {
-                if flip(0.01) {add edge(g.vertices[i],g.vertices[j]) to: g;}
-            }
-        }
+		
+//		g <- graph([]);
+		
+		loop agt over: a {
+			add node(agt) to: g;
+		}
+		
+		loop i from: 0 to: length(g.vertices) - 2 {
+			loop j from: i+1 to: length(g.vertices)-1 {
+				write sample(i,j);
+				add edge(g.vertices[i],g.vertices[j]) to: g;
+			}
+		} 
+		
+		write g;
 		
 		caller <- any(a);
 		
-		ask g neighbors_of caller {onsight <- true;}
+		write sample(g successors_of caller);
+//		ask g successors_of caller collect a(each) {
+		ask g successors_of caller {
+			write sample(self);
+			onsight <- true;
+		}
+		
+		using g {
+			write caller neighbors_at 1;
+		}
 		
 		
+//		using g {
+//			ask caller neighbors_at perception {onsight <- true;}	
+//		}
 	}
 	
 }

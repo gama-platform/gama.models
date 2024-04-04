@@ -27,7 +27,7 @@ species a {
 	g mycell;
 	
 	rgb color <- rnd_color(255);
-	bool onsight -> (topology(g) neighbors_of (caller,perception)) contains self;
+	bool onsight -> (topology(g) neighbors_of (caller, perception)) contains self;
 	
 	reflex rndmove when:self!=caller { do rndmove; }
 	
