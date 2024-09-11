@@ -23,7 +23,7 @@ global {
 			free_space <- free_space - shape;
 		}
 		
-		create a number:10 with:[dest::any_location_in(world.shape),location::any_location_in(free_space)] {
+		create a number:10 with:[location::any_location_in(free_space)] {
 			// If pedestrian should avoid other or not
 			avoid_other <- true;
 			// Personal space
@@ -58,8 +58,6 @@ global {
 species b { aspect default {draw shape.contour color:#black;}}
 
 species a skills:[pedestrian] {
-	
-	point dest;
 	
 	reflex move {
 		do walk;
