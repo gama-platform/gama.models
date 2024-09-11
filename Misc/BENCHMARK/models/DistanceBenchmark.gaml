@@ -34,14 +34,23 @@ global {
 	float bench_clsaad_wc;
 	float bench_clsnat_wc;
 	
-	int nbagent <- 100 parameter:true min:100 max:50000;
-	bool dist <- true parameter:true;
-	bool clos <- true parameter:true;
-	bool clos_condition <- true parameter:true;
+	int nbagent <- 1000 ;
+	bool dist <- true ;
+	bool clos <- true ;
+	bool clos_condition <- true;
+	
+	bool use_geometry_instead_of_points <- false;
+	bool remove_slow_operators <- true;
+	
+	
 	
 	init {
 		
-		create a number:nbagent;
+		create a number:nbagent {
+			if use_geometry_instead_of_points {
+				shape <- circle(0.5);
+			}
+		}
 		
 	}
 	
@@ -51,13 +60,13 @@ global {
 			point p1 <- any_location_in(shape);
 			point p2 <- any_location_in(shape);
 			
-			float t <- machine_time;
+			float t <- gama.machine_time;
 			float dt <- p1 distance_to p2;
-			bench_dt <- bench_dt + machine_time - t;
+			bench_dt <- bench_dt + gama.machine_time - t;
 			
-			t <- machine_time;
+			t <- gama.machine_time;
 			float mdt <- sqrt((p1 - p2).x^2 + (p1 - p2).y^2);
-			bench_mdt <- bench_mdt + machine_time - t;
+			bench_mdt <- bench_mdt + gama.machine_time - t;
 			
 			if dt!=mdt {error "Calculus error : "+sample(dt)+" | "+sample(mdt);}
 		}
@@ -68,62 +77,63 @@ global {
 
 species a skills:[moving] {
 	
-	reflex dowander { do wander amplitude:90; }
+	reflex dowander { do wander amplitude:90.0; }
 	
 	reflex bench_distance when:dist{
-		float t <- machine_time;
+		float t <- gama.machine_time;
 		list<a> nsd <- a inside (self buffer 2#m);
-		bench_inside <- bench_inside + machine_time - t;
+		bench_inside <- bench_inside + gama.machine_time - t;
 		
-		t <- machine_time;
+		t <- gama.machine_time;
 		list<a> vrlp <- a overlapping (self buffer 2#m);
-		bench_ovlpping <- bench_ovlpping + machine_time - t;
+		bench_ovlpping <- bench_ovlpping + gama.machine_time - t;
 		
-//		t <- machine_time;
-//		list<a> vrl <- a where (each overlaps (self buffer 2#m));
-//		bench_overlaps <- bench_overlaps + machine_time - t; 
-//		
-//		t <- machine_time;
-//		list<a> dist <- a where (each distance_to self < 2#m);
-//		bench_distanceto <- bench_distanceto + machine_time - t;
+		if not(remove_slow_operators) {
+			t <- gama.machine_time;
+			list<a> vrl <- a where (each overlaps (self buffer 2#m));
+			bench_overlaps <- bench_overlaps + gama.machine_time - t; 
+			
+			t <- gama.machine_time;
+			list<a> dist1 <- a where (each distance_to self < 2#m);
+			bench_distanceto <- bench_distanceto + gama.machine_time - t;
+		}
+		t <- gama.machine_time;
+		list<a> dist2 <- a at_distance 2#m;
+		bench_atdistance <- bench_atdistance + gama.machine_time - t;
 		
-		t <- machine_time;
-		list<a> dist <- a at_distance 2#m;
-		bench_atdistance <- bench_atdistance + machine_time - t;
-		
-		t <- machine_time;
-		list<a> dist <- self neighbors_at 2#m;
-		bench_neighbors <- bench_neighbors + machine_time - t;
+		t <- gama.machine_time;
+		list<a> dist3 <- self neighbors_at 2#m;
+		bench_neighbors <- bench_neighbors + gama.machine_time - t;
 	}
 	
 	reflex closest_distance when:clos{
-		float t <- machine_time;
-		geometry g <- self buffer 2#m;
-		a vrlp <- any(a overlapping g);
-		bench_clsvrlpng <- bench_clsvrlpng + machine_time - t;
+		float t <- gama.machine_time;
+		a vrlp <- any(a overlapping (self buffer 2#m));
+		bench_clsvrlpng <- bench_clsvrlpng + gama.machine_time - t;
 		
-		t <- machine_time;
-		a clsfw <- a first_with (each distance_to self < 2#m);
-		bench_clsfwdt <- bench_clsfwdt + machine_time - t; 
+		if not(remove_slow_operators) {
+			t <- gama.machine_time;
+			a clsfw <- a first_with (each distance_to self < 2#m);
+			bench_clsfwdt <- bench_clsfwdt + gama.machine_time - t; 
+		}
 		
-		t <- machine_time;
+		t <- gama.machine_time;
 		a clst <- a closest_to self;
 		clst <- clst distance_to self < 2#m ? clst : nil; 
-		bench_clst <- bench_clst + machine_time - t; 
+		bench_clst <- bench_clst + gama.machine_time - t; 
 		
-		t <- machine_time;
-		a clansd <- agents_inside(self buffer 2#m) first_with (each is a);
-		bench_clsansd <- bench_clsansd + machine_time - t;
+		t <- gama.machine_time;
+		a clansd <- a(agents_inside(self buffer 2#m) first_with (each is a));
+		bench_clsansd <- bench_clsansd + gama.machine_time - t;
 		
-		t <- machine_time;
-		a aad <- any(a at_distance 2#m);
-		bench_aad <- bench_clsansd + machine_time - t;
-		
-		t <- machine_time;
+		t <- gama.machine_time;
 		a neigh <- any(self neighbors_at 2#m);
-		bench_nat <- bench_nat + machine_time - t;
+		bench_nat <- bench_nat + gama.machine_time - t;
 		
-		write sample(bench_aad) + " " + sample(bench_nat);
+		t <- gama.machine_time;
+		a aad <- any(a at_distance 2#m);
+		bench_aad <- bench_aad + gama.machine_time - t;
+	
 		
 	}
 	
@@ -131,34 +141,44 @@ species a skills:[moving] {
 		
 		list<a> agent_sublist <- int(nbagent*0.5) among a;
 		
-		float t <- machine_time;
+		float t <- gama.machine_time;
 		a vrlp <- any(agent_sublist overlapping (self buffer 2#m));
-		bench_clsvrlpng_wc <- bench_clsvrlpng_wc + machine_time - t;
+		bench_clsvrlpng_wc <- bench_clsvrlpng_wc + gama.machine_time - t;
 		
-		t <- machine_time;
-		a clsfw <- agent_sublist first_with (each distance_to self < 2#m);
-		bench_clsfwdt_wc <- bench_clsfwdt_wc + machine_time - t; 
+		if not(remove_slow_operators) {
+			t <- gama.machine_time;
+			a clsfw <- agent_sublist first_with (each distance_to self < 2#m);
+			bench_clsfwdt_wc <- bench_clsfwdt_wc + gama.machine_time - t; 
+		}
 		
-		t <- machine_time;
+		t <- gama.machine_time;
 		a clst <- agent_sublist closest_to self;
 		clst <- clst distance_to self < 2#m ? clst : nil; 
-		bench_clst_wc <- bench_clst_wc + machine_time - t; 
+		bench_clst_wc <- bench_clst_wc + gama.machine_time - t; 
 		
-		t <- machine_time;
-		a clansd <- agents_inside(self buffer 2#m) first_with (agent_sublist contains each);
-		bench_clsansd_wc <- bench_clsansd_wc + machine_time - t;
+		t <- gama.machine_time;
+		a clansd <- a(agents_inside(self buffer 2#m) first_with (agent_sublist contains each));
+		bench_clsansd_wc <- bench_clsansd_wc + gama.machine_time - t;
 		
-		t <- machine_time;
+		t <- gama.machine_time;
 		a claad <- any(agent_sublist at_distance 2#m);
-		bench_clsaad_wc <- bench_clsaad_wc + machine_time - t;
+		bench_clsaad_wc <- bench_clsaad_wc + gama.machine_time - t;
 		
-		t <- machine_time;
+		t <- gama.machine_time;
 		a clanat <- self neighbors_at 2#m first_with (agent_sublist contains each);
-		bench_clsnat_wc <- bench_clsnat_wc + machine_time - t;
+		bench_clsnat_wc <- bench_clsnat_wc + gama.machine_time - t;
 	}
 }
 
 experiment xp {
+	parameter "number of agents" var: nbagent min:100 max:50000;
+	parameter "Benchmark distance operators" var: dist ;
+	parameter "Benchmark close operators" var: clos ;
+	parameter "Benchmark close with condition operators" var: clos_condition;
+	
+	parameter "Use a circle(0.5) geometry for agent's shape instead of a point" var: use_geometry_instead_of_points;
+	parameter "Remove too slow tests (which not use the quadtree) to accelerate the benchmark " var: remove_slow_operators;
+	
 	output {
 		monitor FLT_inside value:with_precision(bench_inside/1000,2);
 		monitor FLT_apping value:with_precision(bench_ovlpping/1000,2);
@@ -176,30 +196,37 @@ experiment xp {
 		monitor DT_mdt value:bench_mdt;
 		
 		display main type:2d {
-			chart "collect people around (sec)" type:series visible:dist
+			chart "collect people around (sec)" type:series visible:dist background: #lightgray
 				position:{0,0} size:clos?{0.5,0.5}:(clos_condition?{0.5,1}:{1,1}) {
 				data "a inside (self buffer 2#m)" value:bench_inside/1000;
 				data "a overlapping (self buffer 2#m)" value:bench_ovlpping/1000;
-				data "a where (each overlaps (self buffer 2#m))" value:bench_overlaps/1000;
-				data "a where (each distance_to self < 2#m)" value:bench_distanceto/1000;
+				
+				if not remove_slow_operators {
+					data "a where (each overlaps (self buffer 2#m))" value:bench_overlaps/1000;
+					data "a where (each distance_to self < 2#m)" value:bench_distanceto/1000;
+				}
 				data "a at_distance 2#m" value:bench_atdistance/1000;
 				data "self neighbors_at 2#m" value:bench_neighbors/1000;
 			}
 		
-			chart "closest agent in range" type:series visible:clos
+			chart "closest agent in range" type:series background: #lightgray visible:clos
 				position:dist?{0,0.5}:{0,0} size:dist?{0.5,0.5}:(clos_condition?{0.5,1}:{1,1}) {
 				data "any(a overlapping (self buffer 2#m))" value:bench_clsvrlpng/1000;
-				data "a first_with (each distance_to self < 2#m)" value:bench_clsfwdt/1000;
+				if not remove_slow_operators {
+					data "a first_with (each distance_to self < 2#m)" value:bench_clsfwdt/1000;
+				}
 				data "a clst <- a closest_to self; clst <- clst distance_to self < 2#m ? clst : nil;" value:bench_clst/1000;
 				data "agents_inside(self buffer 2#m) first_with (each is a)" value:bench_clsansd/1000;
 				data "any(a at_distance 2#m)" value:bench_aad/1000;
 				data "any(self neighbors_at 2#m)" value:bench_nat/1000;
 				
 			}
-			chart "closest agent in range with conditions" type:series visible:clos_condition 
+			chart "closest agent in range with conditions" background: #lightgray type:series visible:clos_condition 
 				position:dist?{0.5,0.0}:(clos?{0.5,0.0}:{0,0}) size:dist?{0.5,0.5}:(clos?{0.5,1}:{1,1}) {
 				data "any(agent_sublist overlapping (self buffer 2#m))" value:bench_clsvrlpng_wc/1000;
-				data "agent_sublist first_with (each distance_to self < 2#m)" value:bench_clsfwdt_wc/1000;
+				if not remove_slow_operators {
+					data "agent_sublist first_with (each distance_to self < 2#m)" value:bench_clsfwdt_wc/1000;
+				}
 				data "a clst <- agent_sublist closest_to self; clst <- clst distance_to self < 2#m ? clst : nil;" value:bench_clst_wc/1000;
 				data "agents_inside(self buffer 2#m) first_with (agent_sublist contains each)" value:bench_clsansd_wc/1000;
 				data "any(agent_sublist at_distance 2#m)" value:bench_clsansd_wc/1000;
