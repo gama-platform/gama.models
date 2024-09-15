@@ -35,7 +35,7 @@ global {
 
 species individual virtual:true { 
 	float o min:-1 max:1;
-	point c;
+	pair<float,float> c;
 }
 
 /*
@@ -46,16 +46,16 @@ species ra_individual parent:individual {
 	// Homogeneous confidence
 	init {
 		float muxtrm <- rau * (1-extremismu) + rau * (1-o^6) * (extremismu);  
-		c <- {-muxtrm,muxtrm};
+		c <- -muxtrm::muxtrm;
 	}
 	
 	reflex meet {
 		ra_individual i <- any(ra_individual-self);
 		
-		float ra <- (min(i.o+i.c.y,o+c.y) - max(i.o-i.c.y,o-c.y)) / i.c.y - 1;
+		float ra <- (min([i.o+i.c.value, o+c.value]) - max([i.o+i.c.key, o+c.key])) / ((abs(i.c.key) + i.c.value)/2) - 1;
 		
 		o <- ra > 0 ? o + mu * ra * (i.o - o) : o;
-		c <- {c.x, ra > 0 ? c.y + mu * ra * (i.c.y - c.y) : c.y};
+		c <- c.key :: ra > 0 ? c.value + mu * ra * (i.c.value - c.value) : c.value;
 	}
 	
 }
@@ -66,11 +66,11 @@ species ra_individual parent:individual {
 species bc_individual parent:individual {
 	
 	// Symetry hypothesis
-	init { c <- {-bce,bce}; }
+	init { c <- -bce::bce; }
 	
 	reflex classicalmodel {
 		
-		list<bc_individual> i <- bc_individual where (c.x < (o - each.o) and (o - each.o) < c.y);
+		list<bc_individual> i <- bc_individual where (c.key < (o - each.o) and (o - each.o) < c.value);
 		o <- length(i)^-1 * sum(i collect each.o);
 		
 	}
@@ -94,7 +94,7 @@ experiment od {
 			}
 			chart "confidence" type:series series_label_position:none position:{0,0.5} size:{1,0.5} {
 				loop i over:x {
-					data sample(i) value:i.o color:blend(#red,#grey,i.c.y/rau);
+					data sample(i) value:i.o color:blend(#red,#grey,i.c.value/rau);
 				}
 			}
 		}
