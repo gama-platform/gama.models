@@ -1,0 +1,8 @@
+﻿espece;nom;temperature_base;semis;fin_p1;fin_p2;recolte;besoins_eau_j_p1;besoins_eau_j_p2;besoins_eau_j_p3;rendement_potentiel
+maisT;mais tardif;6;110;160;200;303;3.5;5.5;2.5;15
+soja;soja;5;128;180;210;306;2.6;4.1;2.8;4
+tour;tournesol;4.8;100;190;250;290;2;3;1;5
+betterave;betterave;3;90;150;210;320;3.5;6.1;4.2;55
+gel;gel;0;1;100;250;365;2.1;3.4;1.8;8
+ciCruciCourt;moutarde;1;230;250;300;335;2.7;4.1;3.2;4.5
+CP;blé;0;300;60;120;215;3.6;4.7;2.1;8
