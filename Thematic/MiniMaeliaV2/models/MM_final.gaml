@@ -14,13 +14,19 @@ global {
 
 	// Global	
 	
-	shape_file parcelles0_shape_file <- shape_file("../includes/parcelles.shp");
-	shape_file bassine0_shape_file <- shape_file("../includes/bassine.shp");
+	string parcelles0_shape_file <- "../includes/parcelles.shp";
+	string bassine0_shape_file <- "../includes/bassine.shp";
 	
-	geometry shape <- envelope(parcelles0_shape_file);
+	string especes_et_operation0_csv_file <- "../includes/especes_et_operation.csv";
+
+	geometry shape <- envelope(shape_file(parcelles0_shape_file));
 
 	date starting_date <- date("1997-01-01");
 	float step <- 1#day;
+	
+	map<string,rgb> colorspc <- ["maisT"::#yellow,"CP"::#wheat,"soja"::#beige,
+								"tour"::#orange,"betterave"::#darkmagenta,"gel"::#darkgrey,
+								"ciCruciCourt"::#peru];
 
 	// ----- Données
 	
@@ -30,16 +36,40 @@ global {
 	// ----- Paramètre
 	
 	int nb_xplt;
+	int minparcel min:1 max:40;
+	int maxparcel min:1 max:40;
 
 	init {
 		
-		create parcel from:parcelles0_shape_file with:[
+		create parcel from:shape_file(parcelles0_shape_file) with:[
 			__sequence::string(get("SEQUENCE"))
-		];
+		] {
+			// TODO : parse de la séquence > list
+			sequence <- __sequence split_with "_";
+		}
 		
-		// TODO : parse de la séquence > list
+		create xplt number:nb_xplt { 
+			color <- rnd_color(255);
+			list<parcel> pleft <- parcel - (xplt accumulate each.parcels); 
+			parcels <- min(length(pleft), rnd(minparcel, maxparcel)) among (pleft);
+			ask parcels { xpltant <- myself; }
+		}
 		
-		create bassine from:parcelles0_shape_file with:[capacite::float(get("capacite"))];
+		create bassine from:shape_file(bassine0_shape_file) with:[capacite::float(get("capacite"))];
+		
+		matrix esp <- matrix(csv_file(especes_et_operation0_csv_file).contents);
+		
+		loop e over:rows_list(esp) {
+			create especeCultive {
+				name <- e[0];
+				tempbase <- float(e[2]); 
+				semi <- int(e[3]);
+				fp1 <- int(e[4]); fp2 <- int(e[5]); recolte <- int(e[6]);
+				bp1 <- float(e[7]); bp2 <- float(e[8]); bp3 <- float(e[9]);
+				rendement <- float(e[10]);
+			}
+			
+		}
 		
 	}
 	
@@ -66,6 +96,8 @@ species bassine {
 // Exploitation
 species xplt {
 	
+	rgb color;
+	
 	list<parcel> parcels;
 	
 	map<especeCultive, float> recolte;
@@ -74,7 +106,9 @@ species xplt {
 		
 		loop p over:parcels {
 			if p.plante=!nil { 
-				if current_date.day_of_year = p.plante {}
+				if current_date.day_of_year = p.plante {
+					// TODO : semi
+				}
 			} else {
 				// TODO : recolter
 			}
@@ -87,7 +121,10 @@ species xplt {
 // Parcelle de culture
 species parcel {
 	
+	xplt xpltant;
+	
 	string __sequence;
+	list<string> sequence;
 	
 	float mru; // TODO : définir la capacité max de reserve utile
 	float reserveU min:0 max:mru;
@@ -123,7 +160,10 @@ species parcel {
 		
 	}
 	
-	aspect main { draw shape color:#blue; }
+	aspect main { 
+		draw shape color:plante=nil ? #white : colorspc[plante.name]; 
+		draw shape.contour color:xpltant.color;
+	}
 	
 }
 
@@ -164,6 +204,10 @@ species especeCultive {
 }
 
 experiment xp {
+	
+	parameter nombre_exploitations var:nb_xplt init:40;
+	parameter min_parcels var:minparcel init:8;
+	parameter max_parcels var:maxparcel init:20;
 	
 	output {
 		display main {
