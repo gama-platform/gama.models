@@ -41,11 +41,9 @@ global {
 
 	init {
 		
-		create parcel from:shape_file(parcelles0_shape_file) with:[
-			__sequence::string(get("SEQUENCE"))
-		] {
+		create parcel from:shape_file(parcelles0_shape_file) {
 			// TODO : parse de la séquence > list
-			sequence <- __sequence split_with "_";
+			sequence <- string(get("SEQUENCE")) split_with "_";
 		}
 		
 		create xplt number:nb_xplt { 
@@ -79,7 +77,7 @@ global {
 		if current_date.day_of_year = 1 {
 			env <- matrix(csv_file("../includes/meteoSAFRAN_1991_2019/"+current_date.year+".csv").contents);
 		}
-		atmo <- copy_between( rows_list(env)[current_date.day_of_year-1], 2, 6);
+		atmo <- copy_between( rows_list(env)[current_date.day_of_year-1], 2, 6) as list<float>;
 		write sample(atmo);
 		
 	}
@@ -105,8 +103,8 @@ species xplt {
 	reflex act {
 		
 		loop p over:parcels {
-			if p.plante=!nil { 
-				if current_date.day_of_year = p.plante {
+			if p.plante != nil { 
+				if current_date.day_of_year = p.plante.fp1 {
 					// TODO : semi
 				}
 			} else {
@@ -127,7 +125,7 @@ species parcel {
 	list<string> sequence;
 	
 	float mru; // TODO : définir la capacité max de reserve utile
-	float reserveU min:0 max:mru;
+	float reserveU min:0.0 max:mru;
 	
 	// Actual
 	float satmm;
@@ -153,8 +151,8 @@ species parcel {
 		float r <- satmm / besmm * plante.rendement * (shape.area / 10000);
 		
 		plante <- nil;
-		satmm <- 0;
-		besmm <- 0;
+		satmm <- 0.0;
+		besmm <- 0.0;
 		
 		return r;
 		
@@ -198,7 +196,7 @@ species especeCultive {
 		else if current_date.day_of_year < recolte {
 			return bp3;
 		}  
-		return 0;
+		return 0.0;
 	}
 	
 }
