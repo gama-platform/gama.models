@@ -33,6 +33,8 @@ global {
 	matrix env;
 	list<float> atmo;
 	
+	float MAX_MRU <- 100.0;
+	
 	// ----- Paramètre
 	
 	int nb_xplt;
@@ -42,7 +44,6 @@ global {
 	init {
 		
 		create parcel from:shape_file(parcelles0_shape_file) {
-			// TODO : parse de la séquence > list
 			sequence <- string(get("SEQUENCE")) split_with "_";
 		}
 		
@@ -77,9 +78,16 @@ global {
 		if current_date.day_of_year = 1 {
 			env <- matrix(csv_file("../includes/meteoSAFRAN_1991_2019/"+current_date.year+".csv").contents);
 		}
+		// atmo : RRmm;Tmin;Tmax;ETP;RGI
 		atmo <- copy_between( rows_list(env)[current_date.day_of_year-1], 2, 6) as list<float>;
 		write sample(atmo);
 		
+	}
+	
+	reflex pluie {
+		ask parcel {
+			mru <- mru + atmo[0]; 
+		}
 	}
 
 }
@@ -102,13 +110,24 @@ species xplt {
 
 	reflex act {
 		
-		loop p over:parcels {
-			if p.plante != nil { 
-				if current_date.day_of_year = p.plante.fp1 {
-					// TODO : semi
+//		loop p over:parcels {
+		ask parcels {
+			if self.plante = nil { 
+				string nom_prochaine_espace_cultivee <- sequence[index_sequence];
+				especeCultive prochaine_espece_cultivee <- especeCultive first_with(each.name = nom_prochaine_espace_cultivee);
+			
+				if(prochaine_espece_cultivee = nil) {
+					write "" + nom_prochaine_espace_cultivee + " --- " + prochaine_espece_cultivee color: #red;
+				} else if current_date.day_of_year = prochaine_espece_cultivee.semi {
+					// semi
+					do semis(prochaine_espece_cultivee);
+					// move the index_sequence to the next culture
+					index_sequence <- (index_sequence + 1) mod length(sequence); 
 				}
-			} else {
+			} else if current_date.day_of_year = self.plante.recolte {
+
 				// TODO : recolter
+				float recu <- self.recolte(); 
 			}
 		}
 		
@@ -121,10 +140,10 @@ species parcel {
 	
 	xplt xpltant;
 	
-	string __sequence;
 	list<string> sequence;
+	int index_sequence <- 0;
 	
-	float mru; // TODO : définir la capacité max de reserve utile
+	float mru max: MAX_MRU; // TODO : définir la capacité max de reserve utile
 	float reserveU min:0.0 max:mru;
 	
 	// Actual
@@ -132,7 +151,7 @@ species parcel {
 	float besmm;
 	especeCultive plante;
 	
-	reflex waterConsumption when:plante!=nil {
+	reflex waterConsumption when: plante!=nil {
 		
 		float b <- plante.besoinEau();
 		float s <- min(reserveU, b);
@@ -162,7 +181,9 @@ species parcel {
 		draw shape color:plante=nil ? #white : colorspc[plante.name]; 
 		draw shape.contour color:xpltant.color;
 	}
-	
+	aspect water { 
+		draw shape color: rgb(0,0,int(255*mru/MAX_MRU)); 
+	}	
 }
 
 // Espece de plante
@@ -173,10 +194,10 @@ species especeCultive {
 	
 	// Periode
 	int semi;
+	int recolte;
 	
 	int fp1;
 	int fp2;
-	int recolte;
 	
 	// Besoins
 	float bp1;
@@ -211,6 +232,9 @@ experiment xp {
 		display main {
 			species parcel aspect:main;
 		}
+		display water {
+			species parcel aspect:water;
+		}		
 	}
 	
 }
