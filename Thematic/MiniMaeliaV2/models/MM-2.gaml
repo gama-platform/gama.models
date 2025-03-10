@@ -32,7 +32,7 @@ global {
 	// ----- Données
 	
 	matrix env;
-	list<float> atmo;
+	list<float> atmo <- [0];
 	
 	float MAX_MRU <- 100.0;
 	
@@ -210,7 +210,10 @@ experiment xp {
 		}					
 		display sols {
 			species sol aspect:main;
-		}			
+		}		
+		display rain {
+			chart "r" { data "rains" value:atmo[0] style:spline; }
+		}	
 	}
 	
 }

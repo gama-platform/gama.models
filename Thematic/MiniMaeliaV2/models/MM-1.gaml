@@ -35,12 +35,6 @@ global {
 	list<float> atmo;
 	
 	float MAX_MRU <- 100.0;
-	
-	// ----- Paramètre
-	
-	int nb_xplt;
-	int minparcel min:1 max:40;
-	int maxparcel min:1 max:40;
 
 	init {
 		create sol from: typeDeSolParZH0_shape_file with:[RU::float(get('RU'))];
@@ -54,13 +48,6 @@ global {
 			} else {
 				mru <- sol min_of(each.RU);
 			}
-		}
-		
-		create xplt number:nb_xplt { 
-			color <- rnd_color(255);
-			list<parcel> pleft <- parcel - (xplt accumulate each.parcels); 
-			parcels <- min(length(pleft), rnd(minparcel, maxparcel)) among (pleft);
-			ask parcels { xpltant <- myself; }
 		}
 		
 		create bassine from:shape_file(bassine0_shape_file) with:[capacite::float(get("capacite"))];
@@ -106,18 +93,6 @@ species bassine {
 	
 }  
 
-// Exploitation
-species xplt {
-	
-	rgb color;
-	
-	list<parcel> parcels;
-	
-	map<especeCultive, float> recolte;
-
-	
-}
-
 // Sols 
 species sol {
 	float RU;
@@ -125,8 +100,6 @@ species sol {
 
 // Parcelle de culture
 species parcel {
-	
-	xplt xpltant;
 	
 	list<string> sequence;
 	int index_sequence <- 0;
@@ -165,26 +138,9 @@ species especeCultive {
 	// Rendement attendu
 	float rendement;
 	
-	float besoinEau {
-		if current_date.day_of_year > semi and current_date.day_of_year < fp1 {
-			return bp1;
-		}
-		else if current_date.day_of_year < fp2 {
-			return bp2;
-		}
-		else if current_date.day_of_year < recolte {
-			return bp3;
-		}  
-		return 0.0;
-	}
-	
 }
 
 experiment xp {
-	
-	parameter nombre_exploitations var:nb_xplt init:40;
-	parameter min_parcels var:minparcel init:8;
-	parameter max_parcels var:maxparcel init:20;
 	
 	output {
 		display cultureInitiale {
