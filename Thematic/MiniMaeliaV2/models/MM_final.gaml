@@ -34,13 +34,18 @@ global {
 	matrix env;
 	list<float> atmo;
 	
-	float MAX_MRU <- 100.0;
+	map<especeCultive, float> recolte;
+	map<especeCultive, float> recolte_theo;
+	
 	
 	// ----- Paramètre
 	
 	int nb_xplt;
 	int minparcel min:1 max:40;
 	int maxparcel min:1 max:40;
+	
+	int nbJourPred <- 4;
+	bool irrigation <- false;
 
 	init {
 		create sol from: typeDeSolParZH0_shape_file with:[RU::float(get('RU'))];
@@ -63,7 +68,9 @@ global {
 			ask parcels { xpltant <- myself; }
 		}
 		
-		create bassine from:shape_file(bassine0_shape_file) with:[capacite::float(get("capacite"))];
+		create bassine from:shape_file(bassine0_shape_file) with:[capacite::float(get("capacite"))] {
+			qteEau <- capacite;
+		}
 		
 		matrix esp <- matrix(csv_file(especes_et_operation0_csv_file).contents);
 		
@@ -77,6 +84,10 @@ global {
 				rendement <- float(e[10]);
 			}	
 		}	
+		
+		loop espec over: especeCultive {
+			recolte[espec] <- 0.0;		
+		}
 	}
 	
 	// Maj 
@@ -95,6 +106,10 @@ global {
 		ask parcel {
 			reserveU <- reserveU + atmo[0]; 
 		}
+		
+		ask bassine {
+			qteEau <-  qteEau + atmo[0] #mm * self.shape.area ;
+		}
 	}
 
 }
@@ -103,6 +118,7 @@ global {
 species bassine {
 	
 	float capacite;
+	float qteEau min: 0.0 max: 2*capacite update:qteEau+1000 ;
 	
 }  
 
@@ -113,11 +129,7 @@ species xplt {
 	
 	list<parcel> parcels;
 	
-	map<especeCultive, float> recolte;
-
-	reflex act {
-		
-//		loop p over:parcels {
+	reflex act {		
 		ask parcels {
 			if self.plante = nil { 
 				string nom_prochaine_espace_cultivee <- sequence[index_sequence];
@@ -132,14 +144,25 @@ species xplt {
 					index_sequence <- (index_sequence + 1) mod length(sequence); 
 				}
 			} else if current_date.day_of_year = self.plante.recolte {
-
-				// TODO : recolter
-				float recu <- self.recolte(); 
+				especeCultive e <- plante;
+				recolte_theo[e] <- recolte_theo[e] + self.recolte_theo(); 				
+				recolte[e] <- recolte[e] + self.recolte(); 				
 			}
+		}
+	}
+	
+	// 1 parcelle par jour ?
+	// Far West
+	reflex irrigation_far_west {
+		parcel p <- (parcel where (each.plante != nil)) with_min_of(each.reserveU);
+		float besoin <- p.plante.besoinEau() * nbJourPred;
+		
+		if besoin >= p.reserveU {  // Do irrigation
+			p.reserveU <- p.reserveU + min(besoin,bassine[0].qteEau / (1#mm * p.shape.area));
+			bassine[0].qteEau <- bassine[0].qteEau - besoin #mm * p.shape.area;
 		}
 		
 	}
-	
 }
 
 // Sols 
@@ -159,7 +182,7 @@ species parcel {
 	list<string> sequence;
 	int index_sequence <- 0;
 	
-	float mru ; // TODO : définir la capacité max de reserve utile
+	float mru ; 
 	float reserveU min:0.0 max:mru;
 	
 	// Actual
@@ -178,7 +201,9 @@ species parcel {
 		
 	}
 	
-	action semis(especeCultive e) { plante <- e; }
+	action semis(especeCultive e) { 
+		plante <- e;
+	}
 	
 	//
 	float recolte {
@@ -193,12 +218,17 @@ species parcel {
 		
 	}
 	
+	float recolte_theo {
+		float r <- plante.rendement * (shape.area / 10000);
+		return r;		
+	}
+	
 	aspect main { 
 		draw shape color:plante=nil ? #white : colorspc[plante.name]; 
 		draw shape.contour color:xpltant.color;
 	}
 	aspect water { 
-		draw shape color: rgb(0,0,int(255*mru/MAX_MRU)); 
+		draw shape color: rgb(0,0,int(255*reserveU/mru)); 
 	}	
 	aspect cultureInitiale { 
 		draw shape color: colorspc[sequence[0]] border: #black;
@@ -243,12 +273,13 @@ species especeCultive {
 
 experiment xp {
 	
-	parameter nombre_exploitations var:nb_xplt init:40;
-	parameter min_parcels var:minparcel init:8;
-	parameter max_parcels var:maxparcel init:20;
+	parameter nombre_exploitations var:nb_xplt init:1;
+	parameter "min_parcels" var:minparcel init:445;
+	parameter "max_parcels" var:maxparcel init:445;
+	parameter "irrigatio" var: irrigation init: true;
 	
 	output {
-		display main {
+/* 		display main {
 			species parcel aspect:main;
 		}
 		display water {
@@ -259,7 +290,22 @@ experiment xp {
 		}					
 		display sols {
 			species sol aspect:main;
-		}			
+		}	*/	
+		display d {
+			chart "toto" {
+				datalist recolte.keys collect(each.name) value: recolte.values ;				
+			}
+		}	
+		display dt {
+			chart "toto" {
+				datalist recolte.keys collect(each.name) value: recolte.keys collect(recolte[each]/max(1,recolte_theo[each]));				
+			}
+		}	
+		display d2 {
+			chart "toto" {
+				data "O" value: bassine[0].qteEau;
+			}
+		}	
 	}
 	
 }
