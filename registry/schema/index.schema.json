@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gama-platform.org/gama.models/registry/schema/index.schema.json",
+  "title": "GAMA model registry index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generated_at", "count", "models"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "generated_at": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"},
+    "count": {"type": "integer", "minimum": 0},
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "path", "latest_version", "gama_version", "format", "thematics", "available", "updated_at"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+          "name": {"type": "string"},
+          "path": {"type": "string", "description": "Path of the entry JSON, relative to index.json"},
+          "latest_version": {"type": "string"},
+          "gama_version": {"type": "string"},
+          "format": {"enum": ["zip", "gamp", "gamx"]},
+          "thematics": {"type": "array", "items": {"type": "string"}},
+          "available": {"type": "boolean", "description": "True when at least one version is downloadable with its recorded hash"},
+          "updated_at": {"type": "string"}
+        }
+      }
+    }
+  }
+}

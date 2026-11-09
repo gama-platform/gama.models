@@ -1,0 +1,148 @@
+name: Share a GAMA model
+description: Add your model to the GAMA community model registry. A bot tests it and opens the pull request for you.
+title: "[Model submission] "
+labels: ["model-submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing your model! 🎉
+
+        Fill in the form below. You don't need to know git or JSON: once you submit, a bot will
+        **download your file, compute its fingerprint (SHA-256), compile it with GAMA** and post the
+        result as a comment here. If everything is fine it opens a pull request that a maintainer merges.
+
+        **Where to host the file?** Use a link that points *directly* to the file and that will never change:
+        a [GitHub release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository) asset,
+        [Zenodo](https://zenodo.org) (also gives you a DOI), [OSF](https://osf.io), your institution's server…
+        Links to a branch archive (`…/archive/refs/heads/main.zip`) or to a Google Drive preview page won't work.
+
+        To change a model that is already in the registry, use the **Update a GAMA model** form instead.
+        More details in [CONTRIBUTING.md](https://github.com/gama-platform/gama.models/blob/main/CONTRIBUTING.md).
+  - type: input
+    id: name
+    attributes:
+      label: Project name
+      description: The name displayed in GAMA. It is also used to build the model identifier.
+      placeholder: Schelling segregation
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Short description
+      description: What does the model do? What can people learn or explore with it? (Markdown allowed)
+    validations:
+      required: true
+  - type: textarea
+    id: authors
+    attributes:
+      label: Authors
+      description: |
+        One author per line. You can add an ORCID and/or an affiliation between parentheses, separated by commas.
+      placeholder: |
+        Jane Doe (0000-0002-1825-0097, IRD)
+        John Smith (University of Somewhere)
+        Alex Martin
+    validations:
+      required: true
+  - type: checkboxes
+    id: thematics
+    attributes:
+      label: Thematics
+      description: Pick all that apply.
+      options:
+        - label: Toy model / teaching
+        - label: Urban & mobility
+        - label: Epidemiology & health
+        - label: Ecology & environment
+        - label: Agriculture & water
+        - label: Climate & natural hazards
+        - label: Social dynamics
+        - label: Economics
+        - label: Spatial / GIS
+        - label: Methods & benchmarks
+  - type: input
+    id: other_thematics
+    attributes:
+      label: Other thematics
+      description: Comma-separated, if none of the above fits.
+  - type: input
+    id: keywords
+    attributes:
+      label: Keywords
+      description: Comma-separated.
+      placeholder: segregation, cellular automata
+  - type: input
+    id: version
+    attributes:
+      label: Model version
+      description: Optional. Defaults to 1.0.0.
+      placeholder: 1.0.0
+  - type: dropdown
+    id: gama_version
+    attributes:
+      label: GAMA version
+      description: The GAMA version your model was built with. The bot compiles your model with this version.
+      options:
+        - "2025.06"
+        - "alpha (development build)"
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Download link
+      description: |
+        Direct link to a `.zip` of your project folder, or to a `.gamp` / `.gamx` file exported from GAMA.
+        `.gamp` and `.gamx` currently require the development build of GAMA.
+      placeholder: https://github.com/me/my-model/releases/download/v1.0.0/my-model.zip
+    validations:
+      required: true
+  - type: input
+    id: main_model
+    attributes:
+      label: Main model file
+      description: Optional. Path of the main `.gaml` file inside the archive, if there are several.
+      placeholder: MyProject/models/main.gaml
+  - type: dropdown
+    id: license
+    attributes:
+      label: License
+      options:
+        - GPL-3.0
+        - LGPL-3.0
+        - MIT
+        - Apache-2.0
+        - BSD-3-Clause
+        - CC-BY-4.0
+        - CC-BY-SA-4.0
+        - CC0-1.0
+        - Other (see the archive)
+    validations:
+      required: true
+  - type: input
+    id: homepage
+    attributes:
+      label: Homepage or source repository
+      placeholder: https://github.com/me/my-model
+  - type: textarea
+    id: citation
+    attributes:
+      label: Citation or DOI
+      description: How should people cite this model?
+  - type: input
+    id: maintainers
+    attributes:
+      label: Other GitHub maintainers
+      description: Optional. Comma-separated GitHub usernames who may also update this entry.
+      placeholder: "@colleague1, @colleague2"
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have the right to share this model and its data under the license above.
+          required: true
+        - label: The link above is permanent and the file will not be modified. I will use the update form to publish a new version.
+          required: true

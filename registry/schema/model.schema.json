@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gama-platform.org/gama.models/registry/schema/model.schema.json",
+  "title": "GAMA model registry entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "name", "description", "authors", "submitted_by", "created_at", "updated_at", "versions"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 64},
+    "name": {"type": "string", "minLength": 1, "maxLength": 200},
+    "description": {"type": "string", "minLength": 1, "maxLength": 10000},
+    "authors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1, "maxLength": 200},
+          "orcid": {"type": "string", "pattern": "^\\d{4}-\\d{4}-\\d{4}-\\d{3}[\\dX]$"},
+          "affiliation": {"type": "string", "maxLength": 300}
+        }
+      }
+    },
+    "thematics": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 100}, "uniqueItems": true},
+    "keywords": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 100}, "uniqueItems": true},
+    "license": {"type": ["string", "null"], "maxLength": 100},
+    "homepage": {"type": ["string", "null"], "format": "uri", "pattern": "^https?://"},
+    "citation": {"type": ["string", "null"], "maxLength": 5000},
+    "submitted_by": {"$ref": "#/$defs/login"},
+    "maintainers": {"type": "array", "items": {"$ref": "#/$defs/login"}, "uniqueItems": true},
+    "issue": {"type": ["integer", "null"], "minimum": 1},
+    "created_at": {"$ref": "#/$defs/timestamp"},
+    "updated_at": {"$ref": "#/$defs/timestamp"},
+    "versions": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/version"}}
+  },
+  "$defs": {
+    "login": {"type": "string", "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$"},
+    "timestamp": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"},
+    "version": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "gama_version", "format", "url", "sha256", "size", "added_at", "validation", "status"],
+      "properties": {
+        "version": {"type": "string", "pattern": "^[0-9A-Za-z][0-9A-Za-z.+_-]{0,31}$"},
+        "gama_version": {"type": "string", "minLength": 1, "maxLength": 32},
+        "format": {"enum": ["zip", "gamp", "gamx"]},
+        "url": {"type": "string", "format": "uri", "pattern": "^https://"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size": {"type": "integer", "minimum": 1},
+        "added_at": {"$ref": "#/$defs/timestamp"},
+        "issue": {"type": ["integer", "null"], "minimum": 1},
+        "changelog": {"type": ["string", "null"], "maxLength": 5000},
+        "main_model": {"type": ["string", "null"], "maxLength": 1000},
+        "gaml_files": {"type": "array", "items": {"type": "string", "maxLength": 1000}},
+        "experiments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["file", "name"],
+            "properties": {
+              "file": {"type": "string", "maxLength": 1000},
+              "name": {"type": "string", "maxLength": 300},
+              "type": {"type": ["string", "null"], "maxLength": 50}
+            }
+          }
+        },
+        "validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["image", "date", "result"],
+          "properties": {
+            "image": {"type": "string"},
+            "date": {"$ref": "#/$defs/timestamp"},
+            "result": {"enum": ["compiled"]}
+          }
+        },
+        "status": {"enum": ["available", "unavailable"]},
+        "status_reason": {"type": ["string", "null"], "maxLength": 200},
+        "status_changed_at": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/timestamp"}]}
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+# Weekly: every published model file must still be downloadable with the SHA-256 recorded when it was accepted.
+# Broken files are listed in a tracking issue and a pull request marks them `unavailable` (or `available` again).
+name: Model registry link check
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays, 06:00 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: registry-link-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/registry/requirements.txt
+
+      - run: pip install -r tools/registry/requirements.txt
+
+      - name: Download and fingerprint every published file
+        id: check
+        run: python -m tools.registry check-links --apply --out "$RUNNER_TEMP/links"
+
+      - name: Create the labels
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m tools.registry ensure-labels
+
+      - name: Open, update or close the availability pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: registry/link-check
+          title: "[Registry] Update the availability of model files"
+          commit-message: "[Registry] Update the availability of model files"
+          body-path: ${{ runner.temp }}/links/pr.md
+          add-paths: registry/models/*.json
+          labels: registry-link-check
+          delete-branch: true
+
+      - name: Open, update or close the tracking issue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m tools.registry check-links-notify --report "$RUNNER_TEMP/links/report.json"

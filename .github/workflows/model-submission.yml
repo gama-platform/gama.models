@@ -1,0 +1,153 @@
+# Validates "Share a GAMA model" / "Update a GAMA model" issues and opens the registry pull request.
+#
+# Security model:
+# - `validate` handles all untrusted input (issue text, downloaded archive) with a read-only token. The archive is
+#   only compiled (never run) by GAMA in a Docker container without network access.
+# - `publish` has write permissions but only consumes the artifact produced by `validate`, re-validating it.
+# - Issue content is never interpolated with ${{ }} inside `run:` scripts: the Python tooling reads it from files.
+name: Model registry submission
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Number of the submission/update issue to process again
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: registry-issue-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    if: >-
+      github.event_name == 'workflow_dispatch' || (
+        github.event.issue.state == 'open' &&
+        (contains(github.event.issue.labels.*.name, 'model-submission') ||
+         contains(github.event.issue.labels.*.name, 'model-update') ||
+         startsWith(github.event.issue.title, '[Model submission]') ||
+         startsWith(github.event.issue.title, '[Model update]')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      issues: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/registry/requirements.txt
+
+      - run: pip install -r tools/registry/requirements.txt
+
+      - name: Get the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            case "$ISSUE_NUMBER" in (''|*[!0-9]*) echo "::error::issue_number must be a number"; exit 1;; esac
+            gh api "repos/$GITHUB_REPOSITORY/issues/$ISSUE_NUMBER" > "$RUNNER_TEMP/issue.json"
+          else
+            jq .issue "$GITHUB_EVENT_PATH" > "$RUNNER_TEMP/issue.json"
+          fi
+
+      - name: Download, fingerprint and compile the model
+        run: >-
+          python -m tools.registry process-issue
+          --issue-json "$RUNNER_TEMP/issue.json"
+          --work "$RUNNER_TEMP/work"
+          --out "$RUNNER_TEMP/result"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: registry-result
+          path: ${{ runner.temp }}/result
+          retention-days: 7
+
+  publish:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/registry/requirements.txt
+
+      - run: pip install -r tools/registry/requirements.txt
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: registry-result
+          path: ${{ runner.temp }}/result
+
+      - name: Write the registry entry
+        id: publish
+        run: python -m tools.registry publish --result-dir "$RUNNER_TEMP/result"
+
+      - name: Create the labels
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m tools.registry ensure-labels
+
+      - name: Open or update the pull request
+        id: pr
+        if: steps.publish.outputs.ok == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: ${{ steps.publish.outputs.branch }}
+          title: ${{ steps.publish.outputs.title }}
+          commit-message: ${{ steps.publish.outputs.title }}
+          body-path: ${{ steps.publish.outputs.pr_body }}
+          add-paths: ${{ steps.publish.outputs.path }}
+          labels: ${{ steps.publish.outputs.labels }}
+          delete-branch: true
+
+      - name: Close the pull request of a previous successful run
+        if: steps.publish.outputs.ok != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ steps.publish.outputs.issue }}
+        run: |
+          if gh pr view "registry/issue-$ISSUE" --json state -q .state 2>/dev/null | grep -q OPEN; then
+            gh pr close "registry/issue-$ISSUE" --delete-branch \
+              --comment "The issue was edited and does not validate any more (see #$ISSUE). Closing; it will be reopened as a new pull request once fixed."
+          fi
+
+      - name: Report on the issue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_URL: ${{ steps.pr.outputs.pull-request-url }}
+        run: python -m tools.registry notify --result-dir "$RUNNER_TEMP/result" --pr-url "$PR_URL"
+
+  crashed:
+    needs: [validate, publish]
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Tell the contributor
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number || inputs.issue_number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body "⚠️ The registry bot crashed while processing this issue. This is not your fault: a maintainer will have a look ([workflow run]($RUN_URL))."

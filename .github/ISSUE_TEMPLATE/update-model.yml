@@ -1,0 +1,137 @@
+name: Update a GAMA model
+description: Publish a new version of a model already in the registry, or fix its information.
+title: "[Model update] "
+labels: ["model-update"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to change a model that is **already in the registry**.
+        Only fill in what changes: **empty fields stay as they are**.
+
+        Updates requested by someone who isn't the original submitter or a listed maintainer are still processed,
+        but a repository maintainer will check with the owners before merging.
+  - type: input
+    id: model_id
+    attributes:
+      label: Model ID
+      description: |
+        The identifier of the model, as listed in the [registry index](https://gama-platform.org/gama.models/registry/index.json)
+        (it is also the file name in `registry/models/`, without `.json`).
+      placeholder: schelling-segregation
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What do you want to update?
+      options:
+        - Publish a new version of the model file
+        - Update the information only
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: "### New version (only for a new model file)"
+  - type: input
+    id: url
+    attributes:
+      label: Download link
+      description: Direct, permanent link to the new `.zip`, `.gamp` or `.gamx` file.
+  - type: input
+    id: version
+    attributes:
+      label: Model version
+      description: Must be different from the versions already published.
+      placeholder: 1.1.0
+  - type: dropdown
+    id: gama_version
+    attributes:
+      label: GAMA version
+      description: Leave empty to keep the GAMA version of the previous release.
+      options:
+        - "2025.06"
+        - "alpha (development build)"
+  - type: input
+    id: main_model
+    attributes:
+      label: Main model file
+      placeholder: MyProject/models/main.gaml
+  - type: textarea
+    id: changelog
+    attributes:
+      label: What changed in this version?
+  - type: markdown
+    attributes:
+      value: "### Information (leave empty to keep the current value)"
+  - type: input
+    id: name
+    attributes:
+      label: Project name
+  - type: textarea
+    id: description
+    attributes:
+      label: Short description
+  - type: textarea
+    id: authors
+    attributes:
+      label: Authors
+      description: Replaces the whole author list. One per line, `Name (ORCID, Affiliation)`.
+  - type: checkboxes
+    id: thematics
+    attributes:
+      label: Thematics
+      description: Replaces the thematics if you tick at least one box or fill "Other thematics".
+      options:
+        - label: Toy model / teaching
+        - label: Urban & mobility
+        - label: Epidemiology & health
+        - label: Ecology & environment
+        - label: Agriculture & water
+        - label: Climate & natural hazards
+        - label: Social dynamics
+        - label: Economics
+        - label: Spatial / GIS
+        - label: Methods & benchmarks
+  - type: input
+    id: other_thematics
+    attributes:
+      label: Other thematics
+  - type: input
+    id: keywords
+    attributes:
+      label: Keywords
+  - type: dropdown
+    id: license
+    attributes:
+      label: License
+      options:
+        - GPL-3.0
+        - LGPL-3.0
+        - MIT
+        - Apache-2.0
+        - BSD-3-Clause
+        - CC-BY-4.0
+        - CC-BY-SA-4.0
+        - CC0-1.0
+        - Other (see the archive)
+  - type: input
+    id: homepage
+    attributes:
+      label: Homepage or source repository
+  - type: textarea
+    id: citation
+    attributes:
+      label: Citation or DOI
+  - type: input
+    id: maintainers
+    attributes:
+      label: Other GitHub maintainers
+      description: Replaces the list of co-maintainers. Comma-separated GitHub usernames.
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have the right to share this model and its data, and any new link is permanent.
+          required: true

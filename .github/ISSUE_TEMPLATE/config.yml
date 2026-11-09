@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: How to share a model
+    url: https://github.com/gama-platform/gama.models/blob/main/CONTRIBUTING.md
+    about: Hosting tips, what the bot checks, and how updates work.
+  - name: Browse the model registry
+    url: https://gama-platform.org/gama.models/registry/index.json
+    about: All the community models, as JSON.

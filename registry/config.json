@@ -1,0 +1,31 @@
+{
+  "gama_versions": {
+    "2025.06": {
+      "label": "GAMA 2025.06",
+      "image": "gamaplatform/gama:2025.06.4",
+      "formats": ["zip"]
+    },
+    "alpha": {
+      "label": "GAMA development build (alpha)",
+      "image": "gamaplatform/gama:alpha",
+      "formats": ["zip", "gamp", "gamx"]
+    }
+  },
+  "limits": {
+    "download_bytes": 209715200,
+    "extracted_bytes": 1073741824,
+    "extracted_files": 10000,
+    "gaml_files": 300
+  },
+  "download": {
+    "timeout_seconds": 60,
+    "attempts": 3,
+    "user_agent": "gama-model-registry (+https://github.com/gama-platform/gama.models)"
+  },
+  "validation": {
+    "startup_timeout_seconds": 240,
+    "per_file_timeout_seconds": 180,
+    "memory": "4g",
+    "cpus": "2"
+  }
+}
