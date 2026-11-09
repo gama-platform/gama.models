@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "id": "stics-integration",
+  "name": "STICS integration",
+  "description": "This model provides a set of actions that can be used to interact with [STICS](https://stics.inrae.fr/) through its new server mode and packages it in a GAMA agent to use in any GAMA model",
+  "authors": [
+    {
+      "name": "Baptiste Lesquoy",
+      "orcid": "0009-0000-6906-9418"
+    }
+  ],
+  "thematics": [
+    "Toy model / teaching",
+    "Agriculture & water"
+  ],
+  "keywords": [
+    "STICS",
+    "plant",
+    "soil"
+  ],
+  "license": "MIT",
+  "homepage": null,
+  "citation": null,
+  "submitted_by": "lesquoyb",
+  "maintainers": [],
+  "issue": 3,
+  "created_at": "2026-11-09T08:35:17Z",
+  "updated_at": "2026-11-09T08:35:17Z",
+  "versions": [
+    {
+      "version": "1.0.0",
+      "gama_version": "alpha",
+      "format": "zip",
+      "url": "https://github.com/lesquoyb/gama-stics/archive/refs/tags/1.0.0.zip",
+      "sha256": "fa20a1297f10003b99a2b760412d6af402cd1f9c7dd50f52a1155cf8a7159961",
+      "size": 1837837,
+      "added_at": "2026-11-09T08:35:17Z",
+      "issue": 3,
+      "changelog": null,
+      "main_model": "gama-stics-1.0.0/models/example model.gaml",
+      "gaml_files": [
+        "gama-stics-1.0.0/models/AgentStics.gaml",
+        "gama-stics-1.0.0/models/example model.gaml"
+      ],
+      "experiments": [
+        {
+          "file": "gama-stics-1.0.0/models/example model.gaml",
+          "name": "ex",
+          "type": "gui"
+        }
+      ],
+      "validation": {
+        "image": "gamaplatform/gama:alpha",
+        "date": "2026-11-09T08:35:18Z",
+        "result": "compiled"
+      },
+      "status": "available",
+      "status_reason": null,
+      "status_changed_at": null
+    }
+  ]
+}
