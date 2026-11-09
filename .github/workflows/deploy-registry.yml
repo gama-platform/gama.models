@@ -1,4 +1,4 @@
-# Publishes GitHub Pages: the legacy p2 update site (branch p2-deploy) + the model registry under /registry/.
+# Publishes the model registry on GitHub Pages under /registry/ (index.json, models/*.json, schema/).
 # Requires Settings → Pages → Source: "GitHub Actions".
 name: Deploy model registry
 
@@ -10,8 +10,6 @@ on:
       - "tools/registry/**"
       - ".github/workflows/deploy-registry.yml"
   workflow_dispatch:
-  schedule:
-    - cron: "30 5 * * 1" # weekly, also picks up changes pushed to p2-deploy
 
 permissions:
   contents: read
@@ -25,19 +23,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
-          ref: main
           persist-credentials: false
 
-      - name: Check out the p2 update site
-        uses: actions/checkout@v5
-        with:
-          ref: p2-deploy
-          path: _site
-          persist-credentials: false
-
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -46,13 +36,11 @@ jobs:
       - run: pip install -r tools/registry/requirements.txt
 
       - name: Build the registry
-        run: |
-          rm -rf _site/.git _site/registry
-          python -m tools.registry build-index --out _site/registry
+        run: python -m tools.registry build-index --out _site/registry
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
@@ -60,6 +48,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       pages: write
       id-token: write
     environment:
@@ -67,4 +56,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}registry/index.json
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

@@ -80,7 +80,7 @@ The pieces:
   |---|---|---|
   | [`model-submission.yml`](.github/workflows/model-submission.yml) | issue opened, edited or reopened | Validates the issue, opens the PR, comments on the issue. Run it manually (*Run workflow* with the issue number) to process an issue again. |
   | [`registry-ci.yml`](.github/workflows/registry-ci.yml) | PRs touching the registry | Unit tests, plus a check of every entry. |
-  | [`deploy-registry.yml`](.github/workflows/deploy-registry.yml) | pushes to `main` that touch `registry/` | Publishes Pages: the content of the `p2-deploy` branch (the legacy p2 update site) plus the generated `registry/`. `index.json` is generated at this step and is never committed, so parallel submissions can't conflict. |
+  | [`deploy-registry.yml`](.github/workflows/deploy-registry.yml) | pushes to `main` that touch `registry/` | Publishes the generated `registry/` on GitHub Pages. `index.json` is generated at this step and is never committed, so parallel submissions can't conflict. |
   | [`check-links.yml`](.github/workflows/check-links.yml) | Mondays | Re-downloads every file and compares hashes. Maintains a tracking issue labelled `registry-link-check` and a PR that toggles `status`. |
 
 - **GAMA versions** offered in the forms: [`registry/config.json`](registry/config.json) maps each one to a Docker

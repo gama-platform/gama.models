@@ -37,11 +37,11 @@ jobs:
       contents: read
       issues: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -68,7 +68,7 @@ jobs:
           --work "$RUNNER_TEMP/work"
           --out "$RUNNER_TEMP/result"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: registry-result
           path: ${{ runner.temp }}/result
@@ -83,9 +83,9 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -93,7 +93,7 @@ jobs:
 
       - run: pip install -r tools/registry/requirements.txt
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: registry-result
           path: ${{ runner.temp }}/result
@@ -110,7 +110,7 @@ jobs:
       - name: Open or update the pull request
         id: pr
         if: steps.publish.outputs.ok == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: ${{ steps.publish.outputs.branch }}
           title: ${{ steps.publish.outputs.title }}
