@@ -2,6 +2,7 @@ name: Share a GAMA model
 description: Add your model to the GAMA community model registry. A bot tests it and opens the pull request for you.
 title: "[Model submission] "
 labels: ["model-submission"]
+assignees: ["RoiArthurB", "lesquoyb", "AlexisDrogoul", "agrignard", "chapuisk", "benoitgaudou", "LucasGrjs"]
 body:
   - type: markdown
     attributes:
